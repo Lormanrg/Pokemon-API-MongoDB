@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Mongoose } from 'mongoose';
+import { Document } from 'mongoose';
 
 @Schema()
-export class Pokemon extends Mongoose {
+export class Pokemon extends Document {
   // Mongo ID me lo da Mongo
   @Prop({
     unique: true,
