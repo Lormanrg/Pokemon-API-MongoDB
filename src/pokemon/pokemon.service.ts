@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  HttpCode,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -16,21 +18,14 @@ export class PokemonService {
     @InjectModel(Pokemon.name)
     private readonly pokemonModel: Model<Pokemon>,
   ) {}
-
+  // @HttpCode(HttpStatus.ACCEPTED)
   async create(createPokemonDto: CreatePokemonDto) {
     createPokemonDto.name = createPokemonDto.name.toLocaleLowerCase();
     try {
       const pokemon = await this.pokemonModel.create(createPokemonDto);
       return pokemon;
     } catch (error) {
-      if (error.code === 11000) {
-        throw new BadRequestException(
-          `Pokemon already exist in DB ${JSON.stringify(error.keyValue)}`,
-        );
-      }
-      throw new InternalServerErrorException(
-        `Cant create Pokemon - Check server log`,
-      );
+      this.handleExceptiosn(error);
     }
   }
 
@@ -77,15 +72,24 @@ export class PokemonService {
 
       return { ...pokemon.toJSON(), ...updatePokemonDto };
     } catch (error) {
-      if (error.code === 11000) {
-        throw new BadRequestException(
-          `Pokemon can't be updated because ${JSON.stringify(error.keyValue)}`,
-        );
-      }
+      this.handleExceptiosn(error);
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} pokemon`;
+  async remove(id: string) {
+    const pokemon = await this.findOne(id);
+
+    await pokemon.deleteOne();
+  }
+
+  private handleExceptiosn(error: any) {
+    if (error.code === 11000) {
+      throw new BadRequestException(
+        `Pokemon already exist in DB ${JSON.stringify(error.keyValue)}`,
+      );
+    }
+    throw new InternalServerErrorException(
+      `Cant create Pokemon - Check server log`,
+    );
   }
 }
